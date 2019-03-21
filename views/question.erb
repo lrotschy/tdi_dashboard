@@ -1,24 +1,32 @@
 <h2><%= @workshop %>: <%= @module %> Module</h2>
 <h2>"<%= @question %>"</h2>
+<% if @visualization %>
+<div>
 
-<div id="data">
-  <div id="pre">
+  <div class="pre">
     <h4>Pre-Dialogue Responses</h4>
     <p>Mean = <%= mean(@pre_scores)%></p>
     <p>Standard Deviation = <%= @stdev_pre%></p>
-    <img src="/pre_score_boxplot.jpg" width=450>
+    <!-- <img src="/pre_score_boxplot.jpg" width=450> -->
+    <img src="<%= get_file_path("pre", @visualization)%>" width=450>
   </div>
 
-  <div id="post">
-    <h4>Post-Dialogue Responses</h4>
-    <p>Mean = <%= mean(@post_scores)%></p>
-    <p>Standard Deviation = <%= @stdev_post%></p>
-    <img src="/post_score_boxplot.jpg" width=450>
-  </div>
-</div>
+  <div class="post">
+      <% if @data[@workshop][@module][@question]["post"] %>
+        <h4>Post-Dialogue Responses</h4>
+        <p>Mean = <%= mean(@post_scores)%></p>
+        <p>Standard Deviation = <%= @stdev_post%></p>
+        <!-- <img src="/post_score_boxplot.jpg" width=450> -->
+        <img src="<%= get_file_path("post", @visualization)%>" width=450>
+      <% else %>
+        <h4>There are no post-dialogue responses to display</h4>
+      <% end %>
+    </div>
 
-<img src="/pre_score_histogram.jpg" width=450>
-<img src="/post_score_histogram.jpg" width=450>
+
+  </div>
+<% end %>
+
 <h4>Please select the type of visualization you would like to view:</h4>
 
 <form action="/workshops/<%= @workshop %>/<%= @module %>/<%= @question %>" method="get">
@@ -29,3 +37,7 @@
   </select>
   <button type="submit">Submit</button>
 </form>
+
+
+<!-- <img src="/pre_score_histogram.jpg" width=450>
+  <img src="/post_score_histogram.jpg" width=450> -->

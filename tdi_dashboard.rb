@@ -40,35 +40,30 @@ def barplot(questions, stdevs, file_path)
   R.assign "questions", questions
   R.assign "stdevs", stdevs
   R.assign "file_path", file_path
-  R.eval "png(filename=filepath)"
-  R eval "barplot(stdevs,names.arg=questions)"
+  R.eval "jpeg(filename=file_path)"
+  R.eval "par(mar=c(15,4,4,7))"
+  R.eval "par(las=2)"
+  R.eval "barplot(stdevs,names.arg=questions,ylab='Standard Deviation',main='Standard Deviations of Responses')"
   R.eval "dev.off()"
 end
 
-# def stdevs_all_questions(questions, pre_post)
-#   stdevs = []
-#   questions.each do |question, __|
-#     stdevs << standard_deviation(question[pre_post].values)
-#   end
-#   stdevs
-# end
-
+def stdevs_all_questions(questions, pre_post)
+  stdevs = []
+  questions.each do |question, responses|
+    stdevs << standard_deviation(questions[question][pre_post].values)
+  end
+  stdevs
+end
 
 get "/workshops/:workshop" do
   @workshop = params[:workshop]
   @module = params[:module]
-  @questions = @data[@workshop][@module]
-  # @stdevs_pre = stdevs_all_questions(@module, "pre")
-  # @stdevs_post = stdevs_all_questions(@module, "post")
-  # barplot(@questions, stdevs_pre, 'public/barplot_pre.png')
-  # barplot(@questions, stdevs_post, 'public/barplot_post.png')
-
-  #
-  # @pre_scores = @data[@workshop][@module][@question]["pre"].values.map(&:to_i)
-  # @stdev_pre = standard_deviation(@pre_scores)
-  # box_plot_pre(@pre_scores)
-  #
-  #generate boxplots for each question and display with heat on labels?
+  @questions = @data[@workshop][@module].keys
+  @stdevs_pre = stdevs_all_questions(@data[@workshop][@module], "pre")
+  barplot(@questions, @stdevs_pre, 'public/visuals/barplot_pre.jpg')
+  
+  @stdevs_post = stdevs_all_questions(@data[@workshop][@module], "post")
+  barplot(@questions, @stdevs_post, 'public/visuals/barplot_post.jpg')
 
   erb :module, layout: :layout
 end
@@ -101,73 +96,63 @@ def mean(array)
   sum/array.length
 end
 
-
-
-# def box_plot_pre(scores)
-#   R.assign "scores", scores
-#
-#   R.eval "jpeg(filename='public/pre_score_boxplot.jpg')"
-#   R.eval "boxplot(scores)"
-#   R.eval "dev.off()"
-# end
-#
-# def box_plot_post(scores)
-#   R.assign "scores", scores
-#
-#   R.eval "jpeg(filename='public/post_score_boxplot.jpg')"
-#   R.eval "boxplot(scores)"
-#   R.eval "dev.off()"
-# end
-#
-# def box_plot(scores)
-#   R.assign "scores", scores
-#
-#   R.eval "jpeg(filename='public/score_boxplot.jpg')"
-#   R.eval "boxplot(scores)"
-#   R.eval "dev.off()"
-# end
 def box_plot(scores, file_path)
   R.assign "scores", scores
-  # R.eval file_path <- file_path
   R.assign "file_path", file_path
   R.eval "jpeg(filename=file_path)"
-  R.eval "boxplot(scores)"
+  R.eval "boxplot(scores, ylab='Likert Scores')"
   R.eval "dev.off()"
 end
 
 def histogram(scores, file_path)
   R.assign "scores", scores
-  # R.eval file_path <- file_path
   R.assign "file_path", file_path
   R.eval "jpeg(filename=file_path)"
-  R.eval "hist(scores)"
+  R.eval "hist(scores, xlab='Likert Scores')"
   R.eval "dev.off()"
 end
-
-
-#   > M <- c("Reality if overrated", "Science is fake")
-# > png(filename="/Users/lielarotschy/Desktop/bargraph_stdev.png")
-# > H <- c(2.9, 1.0)
-# > barplot(H,names.arg=M,xlab="Question",ylab="StDev",main="Questions by StDev")
-# > dev.off
 
 get "/workshops/:workshop/:module" do
   @workshop = params[:workshop]
   @module = params[:module]
   @question = params[:question]
+  erb :question, layout: :layout
+end
+
+def file_path(pre_post)
+  pre_post == "pre" ? "/visuals/pre_dialogue" : "/visuals/post_dialogue"
+end
+
+def select_vis(visualization)
+  case visualization
+  when "histogram"
+    "_histogram.jpg"
+  when "boxplot"
+    "_boxplot.jpg"
+  end #
+end
+
+def get_file_path(pre_post, visualization)
+  file_path(pre_post) + select_vis(visualization)
+end
+
+get "/workshops/:workshop/:module/:question" do
+  @workshop = params[:workshop]
+  @module = params[:module]
+  @question = params[:question]
+  @visualization = params[:visualization]
 
   @pre_scores = @data[@workshop][@module][@question]["pre"].values.map(&:to_i)
   @stdev_pre = standard_deviation(@pre_scores)
-  # box_plot_pre(@pre_scores)
-  box_plot(@pre_scores, 'public/pre_score_boxplot.jpg')
-  histogram(@pre_scores, 'public/pre_score_histogram.jpg')
+  box_plot(@pre_scores, 'public/visuals/pre_dialogue_boxplot.jpg')
+  histogram(@pre_scores, 'public/visuals/pre_dialogue_histogram.jpg')
 
-  @post_scores = @data[@workshop][@module][@question]["post"].values.map(&:to_i)
-  # box_plot_post(@post_scores)
-  box_plot(@post_scores, 'public/post_score_boxplot.jpg')
-  histogram(@post_scores, 'public/post_score_histogram.jpg')
-
-  @stdev_post = standard_deviation(@post_scores)
+  if @data[@workshop][@module][@question]["post"]
+    @post_scores = @data[@workshop][@module][@question]["post"].values.map(&:to_i)
+    box_plot(@post_scores, 'public/visuals/post_dialogue_boxplot.jpg')
+    histogram(@post_scores, 'public/visuals/post_dialogue_histogram.jpg')
+    @stdev_post = standard_deviation(@post_scores)
+  end
 
   erb :question, layout: :layout
 end

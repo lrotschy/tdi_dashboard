@@ -1,4 +1,17 @@
 <h1><%= @module %></h1>
+
+<div class="pre">
+  <h4>Pre-Dialogue</h4>
+  <img src="/visuals/barplot_pre.jpg" width=450>
+</div>
+
+<div class="post">
+  <% if true %>
+    <h4>Post-Dialogue</h4>
+    <img src="/visuals/barplot_post.jpg" width=450>
+  <% end %>
+</div>
+
 <h4>Please select the question you would like to view:</h4>
 
 <form action="/workshops/<%= @workshop %>/<%= @module %>" method="get">
