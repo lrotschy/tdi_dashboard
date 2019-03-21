@@ -1,0 +1,65 @@
+* {
+  font-family: sans-serif;
+  padding: 1em;
+}
+
+H1  {
+  text-align: center;
+  font-family: sans-serif;
+  padding: .5em;
+}
+
+H2  {
+  text-align: center;
+  font-family: sans-serif;
+  padding: 0;
+  margin: 0;
+}
+
+
+p {
+  padding: 0;
+  margin: 0;
+}
+
+
+#pre {
+  float: left;
+}
+
+#post {
+  float: clear;
+}
+
+#logo {
+  float: left;
+  /* border: dashed; */
+  display: inline-block;
+  width: 25%;
+}
+
+#dashboard {
+  float: clear;
+  /* border: dashed; */
+  display: inline-block;
+  width: 50%;
+  font-size: 3.5em;
+  text-align: center;
+  font_family:
+
+}
+
+#header {
+  float: clear;
+  border: solid;
+  display: inline-block;
+  width: 95%;
+  padding: 0;
+  margin: 0;
+}
+
+#main {
+  float: clear;
+  /* border: dashed; */
+
+}

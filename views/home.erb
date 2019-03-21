@@ -1,0 +1,12 @@
+
+
+<h1>Please select the workshop data you would like to view:</h1>
+
+<form action="/workshops" method="get">
+  <select name="workshop">
+    <% @workshop_list.each do |workshop_name| %>
+      <option><%= workshop_name %></option>
+    <% end %>
+  </select>
+  <button type="submit">Submit</button>
+</form>

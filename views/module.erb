@@ -1,0 +1,11 @@
+<h1><%= @module %></h1>
+<h4>Please select the question you would like to view:</h4>
+
+<form action="/workshops/<%= @workshop %>/<%= @module %>" method="get">
+  <select name="question">
+    <% @data[@workshop][@module].keys.each do |question| %>
+      <option><%= question %></option>
+    <% end %>
+  </select>
+  <button type="submit">Submit</button>
+</form>
