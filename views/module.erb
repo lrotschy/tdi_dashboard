@@ -1,17 +1,25 @@
 <h1><%= @module %></h1>
+<div class="visuals">
+  <div class="pre">
+    <h4>Pre-Dialogue</h4>
+    <% if pre_data?(@data[@workshop][@module]) %>
+      <img src=<%= get_file_path("pre", "barplot") %> width=450>
+    <% else %>
+      <h4>There is no data to display at this time.</h4>
+    <% end %>
+  </div>
 
-<div class="pre">
-  <h4>Pre-Dialogue</h4>
-  <img src="/visuals/barplot_pre.jpg" width=450>
-</div>
-
-<div class="post">
-  <% if true %>
+  <div class="post">
     <h4>Post-Dialogue</h4>
-    <img src="/visuals/barplot_post.jpg" width=450>
-  <% end %>
+    <% if post_data?(@data[@workshop][@module]) %>
+      <img src=<%= get_file_path("post", "barplot") %> width=450>
+    <% else %>
+      <h4>There is no data to display at this time.</h4>
+    <% end %>
+  </div>
 </div>
 
+<div class="drop-down">
 <h4>Please select the question you would like to view:</h4>
 
 <form action="/workshops/<%= @workshop %>/<%= @module %>" method="get">
@@ -22,3 +30,4 @@
   </select>
   <button type="submit">Submit</button>
 </form>
+</div>

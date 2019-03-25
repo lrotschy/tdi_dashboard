@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en-US">
+  <head>
+    <title>TDI Dashboard</title>
+      <meta charset="UTF-8">
+    <link rel="stylesheet" href="/stylesheets/tdi_dashboard.css">
+
+  </head>
+
+
+
+
+  <body>
+    <div id="header">
+      <img src="/TDI_logo.png" width=400em id="logo">
+      <h1 id="dashboard">Dashboard</h1>
+    </div>
+
+
+    <div id="sidenav">
+
+      <% @data[@workshop].each do |category, questions| %>
+      <div class="module">
+        <h2><%= category %></h2>
+        <ul>
+          <li>
+            <a href="/workshops/<%= @workshop %>/<%= category %>/visuals?visualization=barplot">Barplot</a>
+          </li>
+        </ul>
+
+          <% questions.each do |question, __| %>
+
+              <h4><%= question %></h4>
+            <ul>
+              <li>
+                <a href="/workshops/<%= @workshop %>/<%= category %>/<%= question %>?visualization=histogram">Histogram</a>
+              </li>
+              <li>
+                <a href="/workshops/<%= @workshop %>/<%= category %>/<%= question %>?visualization=boxplot">Boxplot</a>
+              </li>
+              <li>
+                <a href="/workshops/<%= @workshop %>/<%= category %>/<%= question %>?visualization=stemplot">Stemplot</a>
+              </li>
+            </ul>
+
+          <% end %>
+          </div>
+        <% end %>
+    </div>
+
+    <div id="main">
+      <%== yield %>
+    </div>
+  </body>
+
+
+</html>

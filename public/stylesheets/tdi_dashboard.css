@@ -23,12 +23,14 @@ p {
 }
 
 
-#pre {
+.pre {
   float: left;
+  display: inline-block;
 }
 
-#post {
+.post {
   float: clear;
+  display: inline-block;
 }
 
 #logo {
@@ -59,7 +61,56 @@ p {
 }
 
 #main {
-  float: clear;
+  /* float: clear; */
   /* border: dashed; */
+  clear: right;
+  overflow: scroll;
+}
 
+/* Fixed sidenav, full height */
+#sidenav {
+  /* height: 100%; */
+  width: 200px;
+  /* position: fixed; */
+  /* z-index: 1; */
+  /* top: 0; */
+  left: 0;
+  /* overflow-x: hidden; */
+  /* padding-top: 20px; */
+  /* float: left; */
+  /* border: dashed; */
+  clear: right;
+  float: left;
+
+}
+
+#sidenav li {
+  padding: 0;
+  margin: 0;
+}
+
+#sidenav h4 {
+  padding: 0;
+  margin: 0;
+}
+#sidenav h2 {
+  padding: 0;
+  margin: 0;
+}
+#sidenav ul {
+  padding: 5px;
+  margin: 0;
+}
+#sidenav .module {
+  border: solid;
+  padding: 20px;
+}
+
+.drop-down {
+  clear: both;
+  width: 100%;
+}
+
+.visuals {
+  float: clear;
 }

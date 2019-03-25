@@ -17,7 +17,7 @@ end
 
 before do
   @data = YAML.load(File.read("data.yaml"))
-  @visualizations = ["histogram", "boxplot", "etc."]
+  @visualizations = ["histogram", "boxplot", "stemplot", "etc."]
 end
 
 get "/" do
@@ -55,37 +55,54 @@ def stdevs_all_questions(questions, pre_post)
   stdevs
 end
 
+def post_data?(mod)
+  mod.values.any? { |hash| hash.keys.include?("post")}
+end
+
+def pre_data?(mod)
+  mod.values.any? { |hash| hash.keys.include?("pre")}
+end
+
 get "/workshops/:workshop" do
   @workshop = params[:workshop]
   @module = params[:module]
   @questions = @data[@workshop][@module].keys
-  @stdevs_pre = stdevs_all_questions(@data[@workshop][@module], "pre")
-  barplot(@questions, @stdevs_pre, 'public/visuals/barplot_pre.jpg')
-  
-  @stdevs_post = stdevs_all_questions(@data[@workshop][@module], "post")
-  barplot(@questions, @stdevs_post, 'public/visuals/barplot_post.jpg')
 
-  erb :module, layout: :layout
+  if pre_data?(@data[@workshop][@module])
+    @stdevs_pre = stdevs_all_questions(@data[@workshop][@module], "pre")
+    barplot(@questions, @stdevs_pre, 'public/visuals/pre_dialogue_barplot.jpg')
+  end
+
+  if post_data?(@data[@workshop][@module])
+    @stdevs_post = stdevs_all_questions(@data[@workshop][@module], "post")
+    barplot(@questions, @stdevs_post, 'public/visuals/post_dialogue_barplot.jpg')
+  end
+
+  erb :module, layout: :main_page_layout
+end
+
+get "/workshops/:workshop/:module/visuals" do
+  @workshop = params[:workshop]
+  @module = params[:module]
+  @visualization = params[:visualization]
+  @questions = @data[@workshop][@module].keys
+
+  if pre_data?(@data[@workshop][@module])
+    @stdevs_pre = stdevs_all_questions(@data[@workshop][@module], "pre")
+    barplot(@questions, @stdevs_pre, 'public/visuals/pre_dialogue_barplot.jpg')
+  end
+
+  if post_data?(@data[@workshop][@module])
+    @stdevs_post = stdevs_all_questions(@data[@workshop][@module], "post")
+    barplot(@questions, @stdevs_post, 'public/visuals/post_dialogue_barplot.jpg')
+  end
+
+  erb :module, layout: :main_page_layout
 end
 
 def standard_deviation(array)
-  sum = 0
-  array.each do |x|
-    sum = sum + x.to_f
-  end
-  mean = sum/array.length
-
-  deviations = []
-  array.each do |x|
-    deviations.push((mean - x)*(mean - x))
-  end
-
-  sum_of_deviations = 0
-  deviations.each do |x|
-    sum_of_deviations += x
-  end
-
-  Math.sqrt((sum_of_deviations)/(array.length-1))
+  R.assign "numbers", array
+  x = R.pull "sd(numbers)"
 end
 
 def mean(array)
@@ -112,11 +129,15 @@ def histogram(scores, file_path)
   R.eval "dev.off()"
 end
 
+def stemplot(scores)
+
+end
+
 get "/workshops/:workshop/:module" do
   @workshop = params[:workshop]
   @module = params[:module]
   @question = params[:question]
-  erb :question, layout: :layout
+  erb :question, layout: :main_page_layout
 end
 
 def file_path(pre_post)
@@ -129,7 +150,11 @@ def select_vis(visualization)
     "_histogram.jpg"
   when "boxplot"
     "_boxplot.jpg"
-  end #
+  when "stemplot"
+    "_stemplot.jpg"
+  when "barplot"
+    "_barplot.jpg"
+  end
 end
 
 def get_file_path(pre_post, visualization)
@@ -142,17 +167,25 @@ get "/workshops/:workshop/:module/:question" do
   @question = params[:question]
   @visualization = params[:visualization]
 
-  @pre_scores = @data[@workshop][@module][@question]["pre"].values.map(&:to_i)
-  @stdev_pre = standard_deviation(@pre_scores)
-  box_plot(@pre_scores, 'public/visuals/pre_dialogue_boxplot.jpg')
-  histogram(@pre_scores, 'public/visuals/pre_dialogue_histogram.jpg')
+  if pre_data?(@data[@workshop][@module])
+    @pre_scores = @data[@workshop][@module][@question]["pre"].values.map(&:to_i)
+    @stdev_pre = standard_deviation(@pre_scores)
+    box_plot(@pre_scores, 'public/visuals/pre_dialogue_boxplot.jpg')
+    histogram(@pre_scores, 'public/visuals/pre_dialogue_histogram.jpg')
+  end
 
-  if @data[@workshop][@module][@question]["post"]
+  if post_data?(@data[@workshop][@module])
     @post_scores = @data[@workshop][@module][@question]["post"].values.map(&:to_i)
     box_plot(@post_scores, 'public/visuals/post_dialogue_boxplot.jpg')
     histogram(@post_scores, 'public/visuals/post_dialogue_histogram.jpg')
     @stdev_post = standard_deviation(@post_scores)
   end
 
-  erb :question, layout: :layout
+  erb :question, layout: :main_page_layout
+end
+
+get "/practice_menu/:workshop" do
+  @workshop = "Fake Workshop 1"
+
+  erb :practice_menu, layout: :layout
 end
