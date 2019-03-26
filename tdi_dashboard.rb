@@ -17,7 +17,7 @@ end
 
 before do
   @data = YAML.load(File.read("data.yaml"))
-  @visualizations = ["histogram", "boxplot", "stemplot", "etc."]
+  @visualizations = ["histogram", "boxplot", "stemplot", "pie", "barplot_question"]
 end
 
 get "/" do
@@ -33,7 +33,7 @@ get "/workshops" do
   @workshop = params[:workshop]
   @modules = @data[@workshop]
   erb :workshop, layout: :layout
-  #generate diagram of modules and questions with heat applied to questions
+  # todo: generate diagram of modules and questions with heat applied to questions
 end
 
 def barplot(questions, stdevs, file_path)
@@ -43,7 +43,8 @@ def barplot(questions, stdevs, file_path)
   R.eval "jpeg(filename=file_path)"
   R.eval "par(mar=c(15,4,4,7))"
   R.eval "par(las=2)"
-  R.eval "barplot(stdevs,names.arg=questions,ylab='Standard Deviation',main='Standard Deviations of Responses')"
+  R.eval "barplot(stdevs,names.arg=questions,ylab='Standard Deviation',main='Standard Deviations of Responses',ylim=c(0,3))"
+  # todo: apply heatmap type colors to barplot and/or question labels
   R.eval "dev.off()"
 end
 
@@ -101,8 +102,11 @@ get "/workshops/:workshop/:module/visuals" do
 end
 
 def standard_deviation(array)
+  stdevr = RinRuby.new
   R.assign "numbers", array
   x = R.pull "sd(numbers)"
+  stdevr.quit
+  x
 end
 
 def mean(array)
@@ -113,24 +117,58 @@ def mean(array)
   sum/array.length
 end
 
-def box_plot(scores, file_path)
-  R.assign "scores", scores
-  R.assign "file_path", file_path
-  R.eval "jpeg(filename=file_path)"
-  R.eval "boxplot(scores, ylab='Likert Scores')"
+def box_plot(scores, file_path_b)
+  bpr = RinRuby.new
+  R.assign "box_scores", scores
+  R.assign "file_path_b", file_path_b
+  R.eval "jpeg(filename=file_path_b)"
+  R.eval "boxplot(box_scores, ylab='Likert Scores')"
   R.eval "dev.off()"
+  bpr.quit
 end
 
-def histogram(scores, file_path)
-  R.assign "scores", scores
-  R.assign "file_path", file_path
-  R.eval "jpeg(filename=file_path)"
-  R.eval "hist(scores, xlab='Likert Scores')"
+def histogram(scores, file_path_h)
+  histr = RinRuby.new
+  R.assign "hist_scores", scores
+  R.assign "file_path_h", file_path_h
+  R.eval "jpeg(filename=file_path_h)"
+  R.eval "hist(hist_scores, xlab='Likert Scores', ylim=c(0,5), main='Histogram of Responses')"
   R.eval "dev.off()"
+  histr.quit
 end
 
-def stemplot(scores)
+# def stemplot(scores)
+#   # How to get it saved as an image or a string???????????
+# end
 
+def pie(scores, file_path_p)
+  scores_by_frequency = []
+  (1..5).each do |n|
+    scores_by_frequency << scores.count(n)
+  end
+  pier = RinRuby.new
+  R.assign "pie_scores", scores_by_frequency
+  R.assign "file_path_p", file_path_p
+  R.eval "jpeg(filename=file_path_p)"
+  R.eval "pie(pie_scores)"
+  R.eval "dev.off()"
+  pier.quit
+end
+
+def barplot_question(scores, file_path_bq)
+  scores_by_frequency = []
+  (1..5).each do |n|
+    scores_by_frequency << scores.count(n)
+  end
+  xlabel = ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"]
+  R.assign "xlabel", xlabel
+  R.assign "scores", scores_by_frequency
+  R.assign "file_path_bq", file_path_bq
+  R.eval "jpeg(filename=file_path_bq)"
+  R.eval "par(mar=c(15,4,4,7))"
+  R.eval "barplot(scores,names.arg=xlabel,ylab='Number of Responses',main='Frequency of Responses',ylim=c(0,5),las=2)"
+  # todo: apply heatmap type colors to barplot and/or question labels
+  R.eval "dev.off()"
 end
 
 get "/workshops/:workshop/:module" do
@@ -154,6 +192,10 @@ def select_vis(visualization)
     "_stemplot.jpg"
   when "barplot"
     "_barplot.jpg"
+  when "pie"
+    "_pie.jpg"
+  when "barplot_question"
+    "_barplot_question.jpg"
   end
 end
 
@@ -172,12 +214,16 @@ get "/workshops/:workshop/:module/:question" do
     @stdev_pre = standard_deviation(@pre_scores)
     box_plot(@pre_scores, 'public/visuals/pre_dialogue_boxplot.jpg')
     histogram(@pre_scores, 'public/visuals/pre_dialogue_histogram.jpg')
+    pie(@pre_scores, 'public/visuals/pre_dialogue_pie.jpg')
+    barplot_question(@pre_scores, 'public/visuals/pre_dialogue_barplot_question.jpg')
   end
 
   if post_data?(@data[@workshop][@module])
     @post_scores = @data[@workshop][@module][@question]["post"].values.map(&:to_i)
     box_plot(@post_scores, 'public/visuals/post_dialogue_boxplot.jpg')
     histogram(@post_scores, 'public/visuals/post_dialogue_histogram.jpg')
+    pie(@post_scores, 'public/visuals/post_dialogue_pie.jpg')
+    barplot_question(@post_scores, 'public/visuals/post_dialogue_barplot_question.jpg')
     @stdev_post = standard_deviation(@post_scores)
   end
 
