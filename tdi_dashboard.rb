@@ -5,9 +5,6 @@ require "tilt/erubis"
 require "yaml"
 require "bcrypt"
 require "rinruby"
-# require "descriptive-statistics"
-# include Enumerable
-# module Enumerable
 
 configure do
   enable :sessions
@@ -64,6 +61,7 @@ def pre_data?(mod)
   mod.values.any? { |hash| hash.keys.include?("pre")}
 end
 
+#only one of the following routes should be included, probably the second because the intention is to have more than one visualization for module data.
 get "/workshops/:workshop" do
   @workshop = params[:workshop]
   @module = params[:module]
@@ -81,6 +79,8 @@ get "/workshops/:workshop" do
 
   erb :module, layout: :main_page_layout
 end
+
+# This route is in place for when there are more than one visualizations for workshop data. It is not necessary otherwise.
 
 get "/workshops/:workshop/:module/visuals" do
   @workshop = params[:workshop]
@@ -155,11 +155,17 @@ def pie(scores, file_path_p)
   pier.quit
 end
 
-def barplot_question(scores, file_path_bq)
+#
+def scores_by_frequency(scores)
   scores_by_frequency = []
   (1..5).each do |n|
     scores_by_frequency << scores.count(n)
   end
+  scores_by_frequency
+end
+
+def barplot_question(scores, file_path_bq)
+  scores_by_frequency = scores_by_frequency(scores)
   xlabel = ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"]
   R.assign "xlabel", xlabel
   R.assign "scores", scores_by_frequency
@@ -203,6 +209,20 @@ def get_file_path(pre_post, visualization)
   file_path(pre_post) + select_vis(visualization)
 end
 
+def get_pre_visuals(scores)
+  box_plot(scores, 'public/visuals/pre_dialogue_boxplot.jpg')
+  histogram(scores, 'public/visuals/pre_dialogue_histogram.jpg')
+  pie(scores, 'public/visuals/pre_dialogue_pie.jpg')
+  barplot_question(scores, 'public/visuals/pre_dialogue_barplot_question.jpg')
+end
+
+def get_post_visuals(scores)
+  box_plot(scores, 'public/visuals/post_dialogue_boxplot.jpg')
+  histogram(scores, 'public/visuals/post_dialogue_histogram.jpg')
+  pie(scores, 'public/visuals/post_dialogue_pie.jpg')
+  barplot_question(scores, 'public/visuals/post_dialogue_barplot_question.jpg')
+end
+
 get "/workshops/:workshop/:module/:question" do
   @workshop = params[:workshop]
   @module = params[:module]
@@ -212,18 +232,12 @@ get "/workshops/:workshop/:module/:question" do
   if pre_data?(@data[@workshop][@module])
     @pre_scores = @data[@workshop][@module][@question]["pre"].values.map(&:to_i)
     @stdev_pre = standard_deviation(@pre_scores)
-    box_plot(@pre_scores, 'public/visuals/pre_dialogue_boxplot.jpg')
-    histogram(@pre_scores, 'public/visuals/pre_dialogue_histogram.jpg')
-    pie(@pre_scores, 'public/visuals/pre_dialogue_pie.jpg')
-    barplot_question(@pre_scores, 'public/visuals/pre_dialogue_barplot_question.jpg')
+    get_pre_visuals(@pre_scores)
   end
 
   if post_data?(@data[@workshop][@module])
     @post_scores = @data[@workshop][@module][@question]["post"].values.map(&:to_i)
-    box_plot(@post_scores, 'public/visuals/post_dialogue_boxplot.jpg')
-    histogram(@post_scores, 'public/visuals/post_dialogue_histogram.jpg')
-    pie(@post_scores, 'public/visuals/post_dialogue_pie.jpg')
-    barplot_question(@post_scores, 'public/visuals/post_dialogue_barplot_question.jpg')
+    get_post_visuals(@post_scores)
     @stdev_post = standard_deviation(@post_scores)
   end
 
